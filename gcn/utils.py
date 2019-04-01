@@ -195,16 +195,16 @@ def load_data(dataset_str, train_size, validation_size, model_config, shuffle=Tr
 
             idx_all = np.setdiff1d(range(len(graph)), isolated_node_idx)
 
-            if not os.path.isfile("data/planetoid/{}.features.npz".format(dataset_str)):
+            if not os.path.isfile("data/{}.features.npz".format(dataset_str)):
                 print("Creating feature vectors for relations - this might take a while...")
                 features_extended = sp.hstack((features, sp.lil_matrix((features.shape[0], len(isolated_node_idx)))),
                                               dtype=np.int32).todense()
                 features_extended[isolated_node_idx, features.shape[1]:] = np.eye(len(isolated_node_idx))
                 features = sp.csr_matrix(features_extended, dtype=np.float32)
                 print("Done!")
-                save_sparse_csr("data/planetoid/{}.features".format(dataset_str), features)
+                save_sparse_csr("data/{}.features".format(dataset_str), features)
             else:
-                features = load_sparse_csr("data/planetoid/{}.features.npz".format(dataset_str))
+                features = load_sparse_csr("data/{}.features.npz".format(dataset_str))
             idx_train = np.arange(x.shape[0])
             idx_test = test_idx_reorder
             if model_config['validate']:
@@ -224,7 +224,7 @@ def load_data(dataset_str, train_size, validation_size, model_config, shuffle=Tr
             y_val[val_mask, :] = labels[val_mask, :]
             y_test[test_mask, :] = labels[test_mask, :]
 
-            return adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, [], []
+            return adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask
 
         features[test_idx_reorder, :] = features[test_idx_range, :]
         labels[test_idx_reorder, :] = labels[test_idx_range, :]
