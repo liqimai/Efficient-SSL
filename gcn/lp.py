@@ -3,7 +3,7 @@ from gcn.graphconv import ap_approximate
 
 
 def Model17(adj, alpha, y_train, y_test):
-    k = int(np.ceil(4 / alpha))
+    k = int(np.ceil(4 * alpha))
     prediction, time = ap_approximate(adj, y_train, alpha, k)
     predicted_labels = np.argmax(prediction, axis=1)
     prediction = np.zeros(prediction.shape)
