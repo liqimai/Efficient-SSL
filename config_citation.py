@@ -1,20 +1,9 @@
-from __future__ import division
 import time
-from copy import deepcopy
 from os import cpu_count
-from gcn.utils import preprocess_model_config
-import argparse
-import pprint
+from copy import deepcopy
 import tensorflow as tf
-import config_citation
-import config_nell
 
-configuration = {
-    # repeat times
-    'repeating'             : 1,
-
-    # The default model configuration
-    'default':{
+default = {
         # Dataset and split
         'dataset'           : 'cora',       # 'Dataset (cora | citeseer | pubmed | large_cora | nell.0.1 | nell.0.01 | nell.0.001)
         'shuffle'           : True,         # random split or not
@@ -47,7 +36,7 @@ configuration = {
         'conv_config'       :   [{
                                     'conv'  : 'rnm', # rnm, rw, ap
                                     'k'     : 1,
-                                    'alpha' : 1/10,
+                                    'alpha' : 10,
                                 } for _ in range(2)],
         'optimizer'         : tf.train.AdamOptimizer,
         'learning_rate'     : 0.01,         # 'Initial learning rate.'
@@ -71,12 +60,21 @@ configuration = {
         'random_seed'       : int(time.time()),  # 'Random seed.'
         'threads'           : cpu_count(),  #'Number of threads'
         'train'             : True,
-    },
+    }
+
+repeat = 1
+
+
+small_label_set ={
+    # repeating times
+    'repeating': repeat,
+
+    # The default model configuration
+    'default': deepcopy(default),
 
     # The list of model to be train.
     # Only configurations that's different with default are specified here
-    'model_list':
-    [
+    'model_list':    [
         # MLP
         {
             'Model': 'MLP',
@@ -91,12 +89,11 @@ configuration = {
         },
         # GCN
         {
-            'Model': 'IGCN',    # GCN is a special case of IGCN
+            'Model': 'IGCN', # GCN is a special case of IGCN
             'name' : 'GCN'
         },
     ]
 
-    # IGCN
     + [
         # IGCN(RNM)
         {
@@ -111,22 +108,6 @@ configuration = {
                 {
                     'conv': 'rnm',
                     'k': 10 // 2,
-                }],
-        },
-
-        # IGCN(RW)
-        {
-            'Model': 'IGCN',
-            'name' : 'IGCN_RW',
-            'connection': 'cc',
-            'conv_config': [
-                {
-                    'conv': 'rw',
-                    'k': 20 // 2,
-                },
-                {
-                    'conv': 'rw',
-                    'k': 20 // 2,
                 }],
         },
         # IGCN(AR)
@@ -158,16 +139,6 @@ configuration = {
                 'k': 10,
             }
         },
-        # GLP(RW)
-        {
-            'Model': 'GLP',
-            'name' : 'GLP_RW',
-            'connection': 'ff',
-            'smooth_config': {
-                'type': 'rw',
-                'k': 20,
-            }
-        },
         # GLP(AR)
         {
             'Model': 'GLP',
@@ -180,67 +151,93 @@ configuration = {
         }
     ]
 }
+small_label_set['default'].update({'train_size': 4})
 
+large_label_set ={
+    # repeating times
+    'repeating': repeat,
 
-# Parse args
-parser = argparse.ArgumentParser(description=(
-    "Implementation for IGCN and GLP model in our paper\n"
-    """"Label Efficient Semi-Supervised Learning via Graph Filtering. (CVPR-19)"\n"""
-    "Most configuration are specified in config.py, please read it and modify it as you want."))
+    # The default model configuration
+    'default': deepcopy(default),
 
-parser.add_argument("--pset", type=str, help='Parameter Set, e.g. "config_citation.large_label_set"')
-parser.add_argument("-v", "--verbose", action="store_true")
-parser.add_argument("--seed", type=int, help='Random seed.')
-parser.add_argument("--repeat", type=int, help='repeat times')
+    # The list of model to be train.
+    # Only configurations that's different with default are specified here
+    'model_list':    [
+        # MLP
+        {
+            'Model': 'MLP',
+            'name' : 'MLP',
+            'connection': 'ff',
+        },
+        # LP
+        {
+            'Model': 'LP',
+            'name' : 'LP',
+            'alpha': 100,
+        },
+        # GCN
+        {
+            'Model': 'IGCN',
+            'name' : 'GCN'
+        },
+    ]
 
-parser.add_argument("--dataset", type=str, help='dataset name')
-parser.add_argument("--train-size", type=str, help='labels per class')
-parser.add_argument("--validate", type=bool, default=None, help='True or False, if use validation set or not')
+    # IGCN
+    + [
+        # IGCN(RNM)
+        {
+            'Model': 'IGCN',
+            'name' : 'IGCN_RNM',
+            'connection': 'cc',
+            'conv_config': [
+                {
+                    'conv': 'rnm',
+                    'k': 5 // 2,
+                },
+                {
+                    'conv': 'rnm',
+                    'k': 5 // 2,
+                }],
+        },
+        # IGCN(AR)
+        {
+            'Model': 'IGCN',
+            'name' : 'IGCN_AR',
+            'connection': 'cc',
+            'conv_config': [
+                {
+                    'conv': 'ap',
+                    'alpha': 10//2,
+                },
+                {
+                    'conv': 'ap',
+                    'alpha': 10//2,
+                }]
+        }
+    ]
 
-parser.add_argument("--epochs", type=int, help='training epochs')
-parser.add_argument("--learning-rate", type=float, help='learning rate')
-parser.add_argument("--dropout", type=float, help='dropout probability, from 0.0 to 1.0')
-parser.add_argument("--weight-decay", type=float, help='L2 regularization')
-parser.add_argument("--layer-size", type=eval, help='a python list of hidden layer widths')
-args = parser.parse_args()
-print(args)
-
-if args.pset is not None:
-    configuration = eval(args.pset)
-if args.verbose is not None:
-    configuration['default']['verbose'] = args.verbose
-if args.seed is not None:
-    configuration['default']['random_seed']=args.seed
-if args.repeat is not None:
-    configuration['repeating']=args.repeat
-
-if args.dataset is not None:
-    configuration['default']['dataset'] = args.dataset
-if args.train_size is not None:
-    configuration['default']['train_size'] = eval(args.train_size)
-if args.validate is not None:
-    configuration['default']['validate'] = args.validate
-
-if args.epochs is not None:
-    configuration['default']['epochs'] = args.epochs
-if args.learning_rate is not None:
-    configuration['default']['learning_rate']=args.learning_rate
-if args.dropout is not None:
-    configuration['default']['dropout'] = args.dropout
-if args.weight_decay is not None:
-    configuration['default']['weight_decay'] = args.weight_decay
-if args.layer_size is not None:
-    configuration['default']['layer_size'] = args.layer_size
-
-pprint.PrettyPrinter(indent=4).pprint(configuration)
-
-
-def set_default_attr(model):
-    model_config = deepcopy(configuration['default'])
-    model_config.update(model)
-    return model_config
-
-
-configuration['model_list'] = list(map(set_default_attr, configuration['model_list']))
-for model_config in configuration['model_list']:
-    preprocess_model_config(model_config)
+    # GLP
+    + [
+        # GLP(RNM)
+        {
+            'Model': 'GLP',
+            'name' : 'GLP_RNM',
+            'connection': 'ff',
+            'smooth_config': {
+                'type': 'rnm',
+                'k': 5,
+            }
+        },
+        # GLP(AR)
+        {
+            'Model': 'GLP',
+            'name' : 'GLP_AR',
+            'connection': 'ff',
+            'smooth_config': {
+                'type': 'ap_appro',
+                'alpha': 10,
+            }
+        }
+    ]
+}
+large_label_set['default'].update({'train_size': 20})
