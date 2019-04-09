@@ -2,7 +2,7 @@
 
 This is a TensorFlow implementation of Improved Graph Convolutional Networks (IGCN) and Generalized Label Propagation (GLP) for the task of (semi-supervised) node classification, as described in our paper:
 
-Li, Qimai, Xiao-Ming Wu, Han Liu, Xiaotong Zhang, and Zhichao Guan. ["Label Efficient Semi-Supervised Learning via Graph Filtering."](https://arxiv.org/abs/1901.09993) In Conference on Computer Vision and Pattern Recognition. 2019.
+Li, Qimai, Xiao-Ming Wu, Han Liu, Xiaotong Zhang, and Zhichao Guan. ["Label Efficient Semi-Supervised Learning via Graph Filtering."](https://arxiv.org/abs/1901.09993) In IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR). 2019.
 
 
 ## Requirements
@@ -83,7 +83,7 @@ Please cite our paper if you use this code or Large Cora dataset in your own wor
 Thanks for [Kipf's implementation of GCN](https://github.com/tkipf/gcn/), on which this repository is initially based.
 
 ## References 
-[1.] Q. Li, X.-M. Wu, H. Liu, X. Zhang, and Z. Guan. Label efficient semi-supervised learning via graph filtering. In Conference on Computer Vision and Pattern Recognition, 2019.
+[1.] Q. Li, X.-M. Wu, H. Liu, X. Zhang, and Z. Guan. Label efficient semi-supervised learning via graph filtering. In IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2019.
 
 [2.] T. N. Kipf and M. Welling. Semi-supervised classification with graph convolutional networks. In International Confer- ence on Learning Representations, 2017.
 
